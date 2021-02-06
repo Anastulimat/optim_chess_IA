@@ -1,0 +1,3 @@
+﻿  board.c
+c:\users\tzkm2460\source\repos\tscp optimisation\tscp optimisation\board.c(62): warning C4013: 'memset' non défini(e) ; extern retournant int pris par défaut
+  TSCP optimisation.vcxproj -> C:\Users\TZKM2460\source\repos\TSCP optimisation\Debug\TSCP optimisation.exe
