@@ -21,39 +21,72 @@ int checkBoard()
 	for (int i = 0; i < 64; i++)
 	{
 		if (piece[i] == EMPTY && board[i] != 0)
-			return zero / zero;
+			return EXIT_FAILURE;
 		if (piece[i] != EMPTY && board[i] == 0)
-			return zero / zero;
+			return EXIT_FAILURE;
 		if (color[i] == LIGHT && (board[i] > 16 || board[i] <= 0))
-			return zero / zero;
+			return EXIT_FAILURE;
 		if(color[i] == DARK && (board[i] < 17 || board[i] > 32))
-			return zero / zero;
+			return EXIT_FAILURE;
 
 		if (board[i] != 0 && pospiece[board[i]] != i)
-			return zero / zero;
+			return EXIT_FAILURE;
 	}
 	
 	for (int i = 1; i <= 32; i++)
 	{
 		if (pospiece[i] != PIECE_DEAD && board[pospiece[i]] != i)
-			return zero / zero;
+			return EXIT_FAILURE;
 		if (pospiece[i] != PIECE_DEAD && piece[pospiece[i]] == EMPTY)
-			return zero / zero;
+			return EXIT_FAILURE;
 		if (pospiece[i] != PIECE_DEAD && (color[pospiece[i]] == LIGHT && i > 16 || color[pospiece[i]] == DARK && i < 17))
-			return zero / zero;
+			return EXIT_FAILURE;
 	}
 
 	for (int i = 0; i < hply; i++)
 	{
 		if (hist_dat[i].capture_board != -1 && pospiece[hist_dat[i].capture_board] != PIECE_DEAD)
-			return zero / zero;
+			return EXIT_FAILURE;
 
 		if (hist_dat[i].capture_board == -1 && hist_dat[i].capture != EMPTY)
-			return zero / zero;
+			return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
 }
+
+void initAttackTables()
+{
+	memset(canAttack, 0, sizeof(canAttack));
+
+	int piece_type, src_square, offset_index, n;
+
+	for (piece_type = 1; piece_type < 6; piece_type++)
+	{
+		for (src_square = 0; src_square < 64; src_square++)
+		{
+			for (offset_index = 0; offset_index < offsets[piece_type]; offset_index++)
+			{
+				for (n = src_square;;) 
+				{
+					n = mailbox[mailbox64[n] + offset[piece[src_square]][offset_index]];
+					if (n == -1)
+						break;
+					if (color[n] != EMPTY) 
+					{ // Destination non vide donc capture
+						if (color[n] == xside)
+							canAttack[piece_type][src_square][n] = 1;
+						break;
+					}
+					canAttack[piece_type][src_square][n] = 1;
+					if (!slide[piece[src_square]])
+						break;
+				}
+			}
+		}
+	}
+}
+
 
 
 void sync_board()
@@ -234,7 +267,8 @@ BOOL attack(int sq, int s)
 						return TRUE;
 				}
 			}
-			else
+			else if (canAttack[piece[i]][i][sq])
+			{
 				for (j = 0; j < offsets[piece[i]]; ++j)
 					for (n = i;;) {
 						n = mailbox[mailbox64[n] + offset[piece[i]][j]];
@@ -247,6 +281,7 @@ BOOL attack(int sq, int s)
 						if (!slide[piece[i]])
 							break;
 					}
+			}
 		}
 	}
 	return FALSE;
