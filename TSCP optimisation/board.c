@@ -466,55 +466,56 @@ void gen_promote(int from, int to, int bits)
 
 BOOL makemove(move_bytes m)
 {
-	assert(checkBoard() == EXIT_SUCCESS);
+	//assert(checkBoard() == EXIT_SUCCESS);
 	/* test to see if a castle move is legal and move the rook
 	   (the king is moved with the usual move code later) */
-	if (m.bits & 2) {
+	if (m.bits & 2) { //roque
 		int from, to;
 
 		if (in_check(side))
 			return FALSE;
 		switch (m.to) {
-			case 62:
-				if (color[F1] != EMPTY || color[G1] != EMPTY ||
-						attack(F1, xside) || attack(G1, xside))
-					return FALSE;
-				from = H1;
-				to = F1;
-				break;
-			case 58:
-				if (color[B1] != EMPTY || color[C1] != EMPTY || color[D1] != EMPTY ||
-						attack(C1, xside) || attack(D1, xside))
-					return FALSE;
-				from = A1;
-				to = D1;
-				break;
-			case 6:
-				if (color[F8] != EMPTY || color[G8] != EMPTY ||
-						attack(F8, xside) || attack(G8, xside))
-					return FALSE;
-				from = H8;
-				to = F8;
-				break;
-			case 2:
-				if (color[B8] != EMPTY || color[C8] != EMPTY || color[D8] != EMPTY ||
-						attack(C8, xside) || attack(D8, xside))
-					return FALSE;
-				from = A8;
-				to = D8;
-				break;
-			default:  /* shouldn't get here */
-				from = -1;
-				to = -1;
-				break;
+		case 62:
+			if (color[F1] != EMPTY || color[G1] != EMPTY ||
+				attack(F1, xside) || attack(G1, xside))
+				return FALSE;
+			from = H1;
+			to = F1;
+			break;
+		case 58:
+			if (color[B1] != EMPTY || color[C1] != EMPTY || color[D1] != EMPTY ||
+				attack(C1, xside) || attack(D1, xside))
+				return FALSE;
+			from = A1;
+			to = D1;
+			break;
+		case 6:
+			if (color[F8] != EMPTY || color[G8] != EMPTY ||
+				attack(F8, xside) || attack(G8, xside))
+				return FALSE;
+			from = H8;
+			to = F8;
+			break;
+		case 2:
+			if (color[B8] != EMPTY || color[C8] != EMPTY || color[D8] != EMPTY ||
+				attack(C8, xside) || attack(D8, xside))
+				return FALSE;
+			from = A8;
+			to = D8;
+			break;
+		default:  /* shouldn't get here */
+			from = -1;
+			to = -1;
+			break;
 		}
+		//Déplacement de la toure au côté du roi
 		color[to] = color[from];
 		piece[to] = piece[from];
 		color[from] = EMPTY;
 		piece[from] = EMPTY;
 
 		board[to] = board[from];
-		board[from] = 0; //Mettre la case à vide
+		board[from] = 0; //Case vide
 		pospiece[board[to]] = to;
 	}
 
@@ -547,39 +548,42 @@ BOOL makemove(move_bytes m)
 
 	/* move the piece */
 	color[(int)m.to] = side;
+	if (piece[(int)m.to] != EMPTY)
+		pospiece[board[(int)m.to]] = PIECE_DEAD;
 	if (m.bits & 32)
 		piece[(int)m.to] = m.promote;
 	else
 		piece[(int)m.to] = piece[(int)m.from];
+
 	color[(int)m.from] = EMPTY;
 	piece[(int)m.from] = EMPTY;
-
-	pospiece[board[(int)m.to]] = PIECE_DEAD;
 	board[(int)m.to] = board[(int)m.from];
 	board[(int)m.from] = 0;
 	pospiece[board[(int)m.to]] = (int)m.to;
 
+
 	/* erase the pawn if this is an en passant move */
-	if (m.bits & 4) {
-		// On supprime le pion en haut et en bas apres la capture en passant
-		if (side == LIGHT)
-		{
-			color[m.to + 8] = EMPTY;
-			piece[m.to + 8] = EMPTY;
-			hist_dat[hply].capture_board = board[m.to + 8];
-			pospiece[board[m.to + 8]] = PIECE_DEAD;
-			board[m.to + 8] = 0;
+	if (m.bits & 4) { //Ici on utilise hply-1 car hply est incrémente au début de la fonction
+		if (side == LIGHT) {
+			color[(int)m.to + 8] = EMPTY;
+			piece[(int)m.to + 8] = EMPTY;
+
+			hist_dat[hply - 1].capture_board = board[(int)m.to + 8];
+			pospiece[board[(int)m.to + 8]] = PIECE_DEAD;
+			board[(int)m.to + 8] = 0;
+
 		}
-		else
-		{
-			color[m.to - 8] = EMPTY;
-			piece[m.to - 8] = EMPTY;
-			hist_dat[hply].capture_board = board[m.to - 8];
-			pospiece[board[m.to - 8]] = PIECE_DEAD;
-			board[m.to - 8] = 0;
+		else {
+			color[(int)m.to - 8] = EMPTY;
+			piece[(int)m.to - 8] = EMPTY;
+
+			hist_dat[hply - 1].capture_board = board[(int)m.to - 8]; 
+			pospiece[board[(int)m.to - 8]] = PIECE_DEAD;
+			board[(int)m.to - 8] = 0;
 		}
 	}
-	
+
+	//assert(checkBoard());
 
 	/* switch sides and test for legality (if we can capture
 	   the other guy's king, it's an illegal position and
@@ -599,6 +603,7 @@ BOOL makemove(move_bytes m)
 
 void takeback()
 {
+	//assert(checkBoard() == EXIT_SUCCESS);
 	move_bytes m;
 
 	side ^= 1;
@@ -612,55 +617,75 @@ void takeback()
 	hash = hist_dat[hply].hash;
 	color[(int)m.from] = side;
 	if (m.bits & 32)
-		piece[(int)m.from] = PAWN;
+		piece[(int)m.from] = PAWN; //takeback sur une promotion
 	else
 		piece[(int)m.from] = piece[(int)m.to];
-	if (hist_dat[hply].capture == EMPTY) {
+	if (hist_dat[hply].capture == EMPTY) { //s'il n'y a pas eu de capture avant
 		color[(int)m.to] = EMPTY;
 		piece[(int)m.to] = EMPTY;
+
+		board[(int)m.from] = board[(int)m.to];
+		pospiece[board[(int)m.from]] = (int)m.from;
+		board[(int)m.to] = 0;
 	}
-	else {
-		color[(int)m.to] = xside;
+	else { // s'il y avait eu une capture avant
+		color[(int)m.to] = xside; //chgt de la couleur car capture
 		piece[(int)m.to] = hist_dat[hply].capture;
+
+		board[(int)m.from] = board[(int)m.to];
+		pospiece[board[(int)m.from]] = (int)m.from;
+		board[(int)m.to] = hist_dat[hply].capture_board;
+		pospiece[board[(int)m.to]] = (int)m.to;
 	}
-	if (m.bits & 2) {
+	if (m.bits & 2) {// roque
 		int from, to;
 
-		switch(m.to) {
-			case 62:
-				from = F1;
-				to = H1;
-				break;
-			case 58:
-				from = D1;
-				to = A1;
-				break;
-			case 6:
-				from = F8;
-				to = H8;
-				break;
-			case 2:
-				from = D8;
-				to = A8;
-				break;
-			default:  /* shouldn't get here */
-				from = -1;
-				to = -1;
-				break;
+		switch (m.to) {
+		case 62:
+			from = F1;
+			to = H1;
+			break;
+		case 58:
+			from = D1;
+			to = A1;
+			break;
+		case 6:
+			from = F8;
+			to = H8;
+			break;
+		case 2:
+			from = D8;
+			to = A8;
+			break;
+		default:  /* shouldn't get here */
+			from = -1;
+			to = -1;
+			break;
 		}
 		color[to] = side;
 		piece[to] = ROOK;
 		color[from] = EMPTY;
 		piece[from] = EMPTY;
+		board[to] = board[from];
+		board[from] = 0;
+		pospiece[board[to]] = to;
 	}
+
 	if (m.bits & 4) {
 		if (side == LIGHT) {
-			color[m.to + 8] = xside;
-			piece[m.to + 8] = PAWN;
+			color[(int)m.to + 8] = xside;
+			piece[(int)m.to + 8] = PAWN;
+
+			board[(int)m.to + 8] = hist_dat[hply].capture_board;
+			pospiece[board[(int)m.to + 8]] = (int)m.to + 8;
 		}
 		else {
-			color[m.to - 8] = xside;
-			piece[m.to - 8] = PAWN;
+			color[(int)m.to - 8] = xside;
+			piece[(int)m.to - 8] = PAWN;
+
+			board[(int)m.to - 8] = hist_dat[hply].capture_board;
+			pospiece[board[(int)m.to - 8]] = (int)m.to - 8;
 		}
 	}
+
 }
