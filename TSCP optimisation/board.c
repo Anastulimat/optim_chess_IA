@@ -266,7 +266,19 @@ void gen()
 	/* so far, we have no moves for the current ply */
 	first_move[ply + 1] = first_move[ply];
 
-	for (i = 0; i < 64; ++i)
+	int colorStartIndex = 1;
+	if (side == DARK)
+		colorStartIndex = 17;
+
+	int index;
+
+	for (index = colorStartIndex; index < colorStartIndex + 16; ++index)
+	{
+
+		int i = pospiece[index];
+		if (i == PIECE_DEAD)
+			continue;
+
 		if (color[i] == side) {
 			if (piece[i] == PAWN) {
 				if (side == LIGHT) {
@@ -308,7 +320,7 @@ void gen()
 							break;
 					}
 		}
-
+	}
 	/* generate castle moves */
 	if (side == LIGHT) {
 		if (castle & 1)
@@ -350,9 +362,23 @@ void gen_caps()
 	int i, j, n;
 
 	first_move[ply + 1] = first_move[ply];
-	for (i = 0; i < 64; ++i)
+
+
+	int colorStartIndex = 1;
+	if (side == DARK)
+		colorStartIndex = 17;
+
+	int index;
+
+	for (index = colorStartIndex; index < colorStartIndex + 16; ++index)
+	{
+
+		int i = pospiece[index];
+		if (i == PIECE_DEAD)
+			continue;
+
 		if (color[i] == side) {
-			if (piece[i]==PAWN) {
+			if (piece[i] == PAWN) {
 				if (side == LIGHT) {
 					if (COL(i) != 0 && color[i - 9] == DARK)
 						gen_push(i, i - 9, 17);
@@ -385,6 +411,7 @@ void gen_caps()
 							break;
 					}
 		}
+	}
 	if (ep != -1) {
 		if (side == LIGHT) {
 			if (COL(ep) != 0 && color[ep + 7] == LIGHT && piece[ep + 7] == PAWN)
@@ -583,7 +610,7 @@ BOOL makemove(move_bytes m)
 		}
 	}
 
-	//assert(checkBoard());
+	//assert(checkBoard() == EXIT_SUCCESS);
 
 	/* switch sides and test for legality (if we can capture
 	   the other guy's king, it's an illegal position and

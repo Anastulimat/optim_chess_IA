@@ -1,3 +1,5 @@
 ﻿  board.c
 c:\users\tzkm2460\source\repos\tscp optimisation\tscp optimisation\board.c(62): warning C4013: 'memset' non défini(e) ; extern retournant int pris par défaut
+c:\users\tzkm2460\source\repos\tscp optimisation\tscp optimisation\board.c(264): warning C4101: 'i' : variable locale non référencée
+c:\users\tzkm2460\source\repos\tscp optimisation\tscp optimisation\board.c(362): warning C4101: 'i' : variable locale non référencée
   TSCP optimisation.vcxproj -> C:\Users\TZKM2460\source\repos\TSCP optimisation\Debug\TSCP optimisation.exe
